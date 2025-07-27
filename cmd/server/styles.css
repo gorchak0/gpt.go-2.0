@@ -1,0 +1,159 @@
+/* Общие стили */
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+	font-family: sans-serif;
+}
+
+#main-table {
+	table-layout: fixed;
+	width: 100vw;
+	height: 100vh;
+	border-collapse: collapse;
+}
+
+#main-table td {
+	vertical-align: top;
+	padding: 20px;
+	box-sizing: border-box;
+}
+
+/* Левая колонка — 70%, светло-серый фон */
+#left-column {
+	width: 70%;
+	background-color: #f0f0f0;
+	overflow: auto;
+}
+
+/* Правая колонка — 30%, темно-серый фон */
+#right-column {
+	width: 30%;
+	background-color: #4a4a4a;
+	color: #fff;
+	overflow: auto;
+}
+
+/* Контейнеры внутри колонок */
+.form-container {
+	min-width: 300px;
+}
+
+label {
+	display: block;
+	margin-top: 1em;
+	font-weight: 600;
+	color: #000;
+}
+
+input[type='text'],
+input[type='number'],
+textarea,
+.output-textarea {
+	width: 100%;
+	padding: 0.5em;
+	box-sizing: border-box;
+	font-family: monospace;
+	font-size: 14px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+
+textarea,
+.output-textarea {
+	min-height: 200px;
+	margin-top: 0.25em;
+	resize: vertical;
+}
+
+/* Для правой колонки — белый текст и более контрастный бордер */
+.output-container label {
+	font-weight: 600;
+	color: #fff;
+}
+
+.output-textarea {
+	flex-grow: 1;
+	resize: both;
+	background-color: #333;
+	color: #fff;
+	border: 1px solid #666;
+}
+
+/* Комментарии под полями */
+.comment {
+	font-size: 12px;
+	color: #666;
+	margin-top: 0.15em;
+	margin-bottom: 0.5em;
+}
+
+/* Опции сплиттера */
+.splitter-options {
+	margin-top: 1em;
+	border: 1px solid #ccc;
+	padding: 1em;
+	background: #e8e8e8;
+	border-radius: 4px;
+}
+
+/* Деактивированное состояние */
+.disabled {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* Сетка для кнопок частей */
+#chunk-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 1em;
+}
+
+.chunk-box {
+	width: 80px;
+	height: 80px;
+	background: #d1f5d3;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-weight: bold;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	user-select: none;
+	border: 1px solid #aaa;
+	text-align: center;
+	color: #000;
+}
+
+.chunk-box.clicked {
+	background: #f7c5c5;
+}
+
+.analyze-button {
+	font-size: 18px;
+	padding: 12px 24px;
+	background-color: #1976d2;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	margin-top: 20px;
+	transition: background-color 0.3s ease;
+	width: 100%;
+}
+
+.analyze-button:hover {
+	background-color: #1565c0;
+}
+
+.chunk-info {
+	margin-top: 1.5em;
+	font-size: 14px;
+	color: #444;
+	font-style: italic;
+}
