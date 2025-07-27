@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Анализ проекта</title>
+		<style>
+			body {
+				font-family: sans-serif;
+				margin: 1em;
+				max-width: 800px;
+			}
+
+			label {
+				display: block;
+				margin-top: 1em;
+			}
+
+			input[type='text'],
+			input[type='number'],
+			textarea {
+				width: 100%;
+				padding: 0.5em;
+				box-sizing: border-box;
+			}
+
+			textarea,
+			pre {
+				min-height: 200px;
+				margin-top: 1em;
+			}
+
+			.splitter-options {
+				margin-top: 1em;
+				border: 1px solid #ccc;
+				padding: 1em;
+			}
+
+			.disabled {
+				opacity: 0.5;
+				pointer-events: none;
+			}
+
+			.switcher {
+				margin-top: 2em;
+				padding: 1em;
+				background: #f9f9f9;
+				border: 1px dashed #ccc;
+			}
+
+			#chunk-grid {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-top: 1em;
+			}
+
+			.chunk-box {
+				width: 80px;
+				height: 80px;
+				background: #d1f5d3; /* светло-зелёный */
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				font-weight: bold;
+				border-radius: 8px;
+				cursor: pointer;
+				transition: background-color 0.3s;
+				user-select: none;
+				border: 1px solid #aaa;
+				text-align: center;
+			}
+
+			.chunk-box.clicked {
+				background: #f7c5c5; /* светло-красный */
+			}
+
+			#output {
+				white-space: pre-wrap;
+				margin-top: 1em;
+			}
+		</style>
+	</head>
+	<body>
+		<h2>Анализ проекта</h2>
+
+		<label>
+			Абсолютный путь к папке:
+			<input
+				type="text"
+				id="folder-path-input"
+				value="C:\Users\admin\Documents\go-kata-other\golibrary"
+			/>
+		</label>
+
+		<label>
+			<input type="radio" name="mode" value="full" checked /> Full
+		</label>
+		<label> <input type="radio" name="mode" value="paths" /> Paths </label>
+
+		<label>
+			Поддерживаемые файлы:
+			<input
+				type="text"
+				id="file-types"
+				value=".go,.txt,.md,.html,.css,.js,dockerfile,.dockerignore,docker-compose.yml,.gitignore,.json,.yaml"
+			/>
+		</label>
+
+		<label>
+			Поддерживаемые папки:
+			<input type="text" id="folders" value="internal,cmd,docs" />
+		</label>
+
+		<label>
+			Исключаемые файлы:
+			<input type="text" id="exclude-files" value=".git,gpt_go,go.mod,go.sum" />
+		</label>
+
+		<label>
+			Исключаемые папки:
+			<input type="text" id="exclude-folders" value="hugo" />
+		</label>
+
+		<div class="splitter-options" id="splitter-block">
+			<label>
+				Размер блока (в символах):
+				<input type="number" id="chunk-size" value="14000" />
+			</label>
+			<label>
+				<input type="checkbox" id="add-prompt" />
+				Добавлять промпт
+			</label>
+		</div>
+
+		<div class="switcher">
+			<label>
+				<input type="checkbox" id="simulate-request" />
+				Показать запрос на сайте (для дебага)
+			</label>
+		</div>
+
+		<button id="start-analysis">Начать анализ</button>
+
+		<div id="chunk-grid"></div>
+		<pre id="output"></pre>
+
+		<script>
+			const splitterBlock = document.getElementById('splitter-block')
+
+			document.querySelectorAll('input[name="mode"]').forEach(r => {
+				r.onchange = () => {
+					const isPaths =
+						document.querySelector('input[name="mode"]:checked').value ===
+						'paths'
+					splitterBlock.classList.toggle('disabled', isPaths)
+				}
+			})
+
+			document.getElementById('start-analysis').onclick = async () => {
+				const folderPath = document.getElementById('folder-path-input').value
+				if (!folderPath.trim()) {
+					alert('Пожалуйста, введите путь к папке.')
+					return
+				}
+
+				const data = {
+					folderPath,
+					mode: document.querySelector('input[name="mode"]:checked').value,
+					supportedFiles: document.getElementById('file-types').value,
+					supportedDirs: document.getElementById('folders').value,
+					excludeFiles: document.getElementById('exclude-files').value,
+					excludeDirs: document.getElementById('exclude-folders').value,
+					chunkSize: document.getElementById('chunk-size').value,
+					addPrompt: document.getElementById('add-prompt').checked,
+				}
+
+				const output = document.getElementById('output')
+				const chunkGrid = document.getElementById('chunk-grid')
+				chunkGrid.innerHTML = ''
+				output.textContent = ''
+
+				if (document.getElementById('simulate-request').checked) {
+					output.textContent = JSON.stringify(data, null, 2)
+				} else {
+					try {
+						const res = await fetch('/analyze', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(data),
+						})
+						if (!res.ok) throw new Error(await res.text())
+						const chunks = await res.json()
+
+						chunks.forEach((chunk, index) => {
+							const box = document.createElement('div')
+							box.className = 'chunk-box'
+							box.textContent = `${index + 1}/${chunks.length}`
+							box.title = 'Кликните для копирования'
+
+							box.onclick = async () => {
+								try {
+									await navigator.clipboard.writeText(chunk)
+									box.classList.add('clicked')
+									const oldTitle = box.title
+									box.title = 'Скопировано!'
+									console.log('✔ Скопировано!')
+									setTimeout(() => {
+										box.title = oldTitle
+									}, 1000)
+								} catch (err) {
+									alert('Не удалось скопировать.')
+								}
+							}
+
+							chunkGrid.appendChild(box)
+						})
+					} catch (e) {
+						output.textContent = '❌ Ошибка: ' + e.message
+					}
+				}
+			}
+
+			splitterBlock.classList.remove('disabled')
+		</script>
+	</body>
+</html>
